@@ -18,6 +18,9 @@ export const Endpoints = {
   Dashboard: {
     GET_DASHBOARD_USERS: '/user/dashboard',
     LIKE_USER: '/like_user',
-    USER_DETAIL : '/user'
+    USER_DETAIL: '/user',
+  },
+  Matches: {
+    GET_MATCH_LIST: '/chatrooms',
   },
 };

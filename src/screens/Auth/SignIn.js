@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Pressable, Text, View, Image} from 'react-native';
 import {Field, Formik} from 'formik';
 import {useDispatch} from 'react-redux';
@@ -15,13 +15,13 @@ import TextInputCustom from '../../components/CustomFormikTextField';
 import Loader from '../../components/Loader';
 import SignIn from './SignIn';
 import {SignInService} from '../../services/SignIn.service';
-import {UserInfoContext} from '../../contextAPI/UserInfoContext';
 import {UserAuth} from '../../contextAPI/UserAuthContext';
 import Validator from '../../utils/Validator';
+import {storeData} from '../../utils/LocalStorage';
 const AuthSignIn = () => {
   const [selectedCallingCode, setSelectedCallingCode] = useState('');
   const [loader, setLoader] = useState(false);
-  const {setUserInfoData, userInfoData} = useContext(UserInfoContext);
+ 
   const {setUserAuthContext} = useContext(UserAuth);
   const validationSchema = Yup.object().shape({
     phone: Yup.string().required('Phone Number is required'),
@@ -53,9 +53,8 @@ const AuthSignIn = () => {
             console.log(responseSignIn, 'signIn');
             if (responseSignIn.status === 200) {
               setUserAuthContext(responseSignIn?.data?.user);
-              // storeData('userSignUpEndData', responseSignIn?.data?.user);
               navigation.navigate('EnterOtpSignIn', {dataValues: values});
-              setUserInfoData(() => values);
+             
             }
             setLoader(false);
           }
@@ -88,7 +87,6 @@ const AuthSignIn = () => {
                 send you a 4-digit code to verify your account.
               </Text>
             </View>
-
             <View
               style={{
                 flexDirection: 'row',

@@ -10,19 +10,17 @@ import OtpInputs from 'react-native-otp-inputs';
 import {reset} from '../../utils/NavigationService';
 import {VerifyOTP} from '../../services/SignIn.service';
 import {storeData} from '../../utils/LocalStorage';
-import {UserInfoContext} from '../../contextAPI/UserInfoContext';
 import {UserAuth} from '../../contextAPI/UserAuthContext';
 export default function EnterOTPSignInScreen({route}) {
   const {dataValues} = route.params;
   const {setUserAuthContext} = useContext(UserAuth);
-  const [counter, setCounter] = useState(60);
+  const [timerCount, setTimer] = useState(60)
   const navigation = useNavigation();
   //Redux States
   const token = useSelector(state => state.auth.token);
   const user = useSelector(state => state.auth.user);
   // const [minutes, setMinutes] = useState(initialMinute);
   // const [seconds, setSeconds] = useState(initialSeconds);
-
   const onNext = async value => {
     if (value == 4) {
       const object = {
@@ -30,6 +28,7 @@ export default function EnterOTPSignInScreen({route}) {
         otp: 1111,
       };
       const responseVerifyOTP = await VerifyOTP(object);
+      console.log(responseVerifyOTP,"verifyOTP")
       if (responseVerifyOTP.status === 200) {
         storeData('user', responseVerifyOTP?.data);
         setUserAuthContext(responseVerifyOTP?.data?.user);
@@ -40,18 +39,25 @@ export default function EnterOTPSignInScreen({route}) {
       // navigation.navigate('SignInStart')
     }
   };
-
   function onBack() {
     navigation.goBack();
   }
-
   useEffect(() => {
-    const timer =
-      counter > 0 && setInterval(() => setCounter(counter - 1), 1000);
-    return () => clearInterval(timer);
-  }, [counter]);
-
-  console.log(counter, 'counter');
+    let int = setInterval(()=>{
+      clearInterval(int)
+console.log(new Date())
+    }, 1000)
+    let interval = setInterval(() => {
+      setTimer(lastTimerCount => {
+          lastTimerCount <= 1 && clearInterval(interval)
+          return lastTimerCount - 1
+      })
+    }, 1000*2)
+    return () => {
+      clearInterval(interval)
+      clearInterval(int)
+    }
+  }, [timerCount]);
   return (
     <BaseView
       header={
@@ -87,7 +93,7 @@ export default function EnterOTPSignInScreen({route}) {
             alignSelf: 'center',
             marginVertical: height(2),
           }}>
-          {counter > 0 && `00:${counter}`}
+          {`00:${timerCount}`}
         </Text>
 
         <Text
@@ -141,7 +147,7 @@ export default function EnterOTPSignInScreen({route}) {
           />
         </View>
 
-        <Pressable>
+      { timerCount < 1 &&  <Pressable>
           <Text
             style={{
               color: '#0E2DCF',
@@ -151,7 +157,7 @@ export default function EnterOTPSignInScreen({route}) {
             }}>
             Send again
           </Text>
-        </Pressable>
+        </Pressable>}
       </View>
     </BaseView>
   );

@@ -22,6 +22,7 @@ import CustomTextInput from '../components/CustomTextInput';
 import TextInputCustom from '../components/CustomFormikTextField';
 import {SignUpStep1} from '../services/CreateAccount.services';
 import Loader from '../components/Loader';
+import {ActiveButtonColors, DisableButtonColors} from '../utils/ButtonColors';
 export default function SignIn1() {
   const [loader, setLoader] = useState(false);
   //Hooks
@@ -51,49 +52,52 @@ export default function SignIn1() {
   return (
     <BaseView
       footer={
-        first.length > 1 && last.length > 1 ? (
-          <Pressable
+        <Pressable
+          disabled={first.length > 1 && last.length > 1 ? false : true}
+          style={{
+            marginBottom: 18,
+          }}
+          onPress={next}>
+          <LinearGradient
+            colors={
+              first.length > 1 && last.length > 1
+                ? ActiveButtonColors
+                : DisableButtonColors
+            }
             style={{
-              marginBottom: 18,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignSelf: 'center',
+              borderRadius: height(1),
+              width: width(80),
+              height: height(7),
             }}
-            onPress={next}>
-            <LinearGradient
-              colors={['#0727CE', '#0727CE', '#052D8D']}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}>
+            <Text
               style={{
-                flexDirection: 'row',
+                color: COLORS.white,
+                fontSize: fontSize(5),
+                textAlign: 'center',
                 justifyContent: 'center',
                 alignSelf: 'center',
-                borderRadius: height(1),
-                width: width(80),
-                height: height(7),
+                fontFamily: FONTS.bold,
+              }}>
+              Next
+            </Text>
+            <Image
+              source={require('../assets/icons/arrow.png')}
+              style={{
+                height: height(6),
+                marginStart: 10,
+                width: width(6),
+                resizeMode: 'contain',
+                justifyContent: 'center',
+                alignSelf: 'center',
               }}
-              start={{x: 0, y: 1}}
-              end={{x: 1, y: 0}}>
-              <Text
-                style={{
-                  color: COLORS.white,
-                  fontSize: fontSize(5),
-                  textAlign: 'center',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  fontFamily: FONTS.bold,
-                }}>
-                Next
-              </Text>
-              <Image
-                source={require('../assets/icons/arrow.png')}
-                style={{
-                  height: height(6),
-                  marginStart: 10,
-                  width: width(6),
-                  resizeMode: 'contain',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                }}
-              />
-            </LinearGradient>
-          </Pressable>
-        ) : null
+            />
+          </LinearGradient>
+        </Pressable>
       }>
       <View style={{flex: 1, paddingVertical: height(20)}}>
         <View style={{flex: 1, alignItems: 'center'}}>

@@ -46,7 +46,6 @@ import TabBarBuyer from '../../components/TabBarBuyer';
 import {storeData} from '../LocalStorage';
 const Tab = createBottomTabNavigator();
 const PrivateRoute = ({tempUser}) => {
-  const {userAuthData} = useContext(UserAuth);
   console.log(tempUser, 'tempUser');
   const Stack = createStackNavigator();
   const AppStack = () => {

@@ -58,14 +58,12 @@ export const SignUpStep4 = id => {
       return err;
     });
 };
-export const SignUpStep5 = data => {
-  const images_attributes = data;
-  const object = {
-    images_attributes: images_attributes,
-    form_step: 5,
-  };
+export const SignUpStep5 = images_attributes => {
+  const formData = new FormData();
+  formData.append('images_attributes', JSON.stringify(images_attributes));
+  formData.append('form_step', 5);
   return axiosInstance
-    .put(`${Endpoints.CreateAccount.SIGNUP_STEPS}`, {user: object})
+    .put(`${Endpoints.CreateAccount.SIGNUP_STEPS}`, {user: formData})
     .then(response => {
       return response;
     })

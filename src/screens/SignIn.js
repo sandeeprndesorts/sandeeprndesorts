@@ -15,16 +15,12 @@ import TextInputCustom from '../components/CustomFormikTextField';
 import Loader from '../components/Loader';
 import SignIn from './SignIn';
 import {SignInService} from '../services/SignIn.service';
-import {UserInfoContext} from '../contextAPI/UserInfoContext';
-import {UserInfoSignUpContext} from '../contextAPI/UserInfoSignUpContext';
 import {navigate} from '../utils/NavigationService';
 import {storeData} from '../utils/LocalStorage';
 import Validator from '../utils/Validator';
 const SignUp = () => {
   const [selectedCallingCode, setSelectedCallingCode] = useState('');
-  const {setUserInfoSignUpContext, userInfoSignUpContext} = useContext(
-    UserInfoSignUpContext,
-  );
+  
   const [loader, setLoader] = useState(false);
   const validationSchema = Yup.object().shape({
     phone: Yup.string().required('Phone Number is required'),
@@ -59,7 +55,7 @@ const SignUp = () => {
             setLoader(true);
             if (values) {
               await storeData('values', values);
-              setUserInfoSignUpContext(values);
+             
             }
             const responseSignIn = await SignInService(values);
             console.log(responseSignIn, 'response');

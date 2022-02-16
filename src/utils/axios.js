@@ -9,7 +9,6 @@ const axiosInstance = axios.create({
 const requestHandler = async request => {
   const currentUser = await getStoredData('user');
   try {
-    console.log(currentUser, 'currentUser');
     request.headers['Authorization'] = currentUser.token;
   } catch (e) {
     console.log(e, 'err');

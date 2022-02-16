@@ -11,7 +11,6 @@ import OtpInputs from 'react-native-otp-inputs';
 import {reset} from '../utils/NavigationService';
 import {VerifyOTP} from '../services/SignIn.service';
 import {getStoredData, storeData} from '../utils/LocalStorage';
-import {UserInfoSignUpContext} from '../contextAPI/UserInfoSignUpContext';
 import {UserAuth} from '../contextAPI/UserAuthContext';
 const SignUpCode = ({route, navigation}) => {
   const [counter, setCounter] = useState(60);

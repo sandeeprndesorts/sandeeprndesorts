@@ -162,7 +162,6 @@ export default function SignIn4() {
                 <View
                   style={{
                     flexDirection: 'row',
-                    flexDirection: 'row',
                     alignItems: 'center',
                     borderColor: selected == item.id ? '#0E2DCF' : '#BFBAC3',
                     borderWidth: 1,
@@ -197,20 +196,22 @@ export default function SignIn4() {
                           <Image
                             source={item.icon}
                             style={{
+                              resizeMode: 'contain',
                               tintColor:
                                 selected == item.id ? '#0E2DCF' : 'black',
                               height: height(5.0),
-                              width: width(6.3),
+                              width: width(10),
                             }}
                           />
                         ) : (
                           <Image
-                            source={item.icon}
+                            source={item.icon}   
                             style={{
+                              resizeMode: 'contain',
                               tintColor:
                                 selected == item.id ? '#0E2DCF' : 'black',
                               height: height(5.0),
-                              width: width(4.9),
+                              width: width(10),
                             }}
                           />
                         )
@@ -218,10 +219,11 @@ export default function SignIn4() {
                         <Image
                           source={item.icon}
                           style={{
+                            resizeMode: 'contain',
                             tintColor:
                               selected == item.id ? '#0E2DCF' : 'black',
-                            height: width(7),
-                            width: width(7),
+                            height: width(14),
+                            width: width(9),
                           }}
                         />
                       )}

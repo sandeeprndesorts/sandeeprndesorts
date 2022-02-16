@@ -4,18 +4,15 @@ import App from './src/App';
 import {name as appName} from './app.json';
 import {Provider} from 'react-redux';
 import store from './store/configureStore';
-import UserInfoDataContext from './src/contextAPI/UserInfoContext';
-import UserInfoSignUpDataContext from './src/contextAPI/UserInfoSignUpContext';
 import UserAuthContext from './src/contextAPI/UserAuthContext';
+import UserDetailIdContext from './src/contextAPI/userDetailIdContext';
 const RNRedux = () => (
   <Provider store={store}>
-    <UserAuthContext>
-      <UserInfoDataContext>
-        <UserInfoSignUpDataContext>
-          <App />
-        </UserInfoSignUpDataContext>
-      </UserInfoDataContext>
-    </UserAuthContext>
+    <UserDetailIdContext>
+      <UserAuthContext>
+        <App />
+      </UserAuthContext>
+    </UserDetailIdContext>
   </Provider>
 );
 AppRegistry.registerComponent(appName, () => RNRedux);

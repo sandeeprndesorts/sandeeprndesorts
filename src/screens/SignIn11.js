@@ -10,11 +10,9 @@ import BaseView from '../components/BaseView';
 import Button from '../components/Button';
 import {fontSize, height, width} from '../components/Resizer';
 import {COLORS, FONTS} from '../constants';
-import {UserSignUpContext} from '../contextAPI/UserSignUpData';
 import {SignUpStep11} from '../services/CreateAccount.services';
 import {storeData} from '../utils/LocalStorage';
 import Validator from '../utils/Validator';
-
 export default function SignIn10() {
   const {setUsersSignUpData} = useContext(UserSignUpContext);
   //Hooks

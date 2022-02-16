@@ -48,20 +48,14 @@ import MatchSent from './screens/MatchSent';
 import MatchDone from './screens/MatchDone';
 import SignIn from './screens/SignIn';
 import SignUp from './screens/SignUp';
-import UsersSignUpDataContext from './contextAPI/UserSignUpData';
+
 import AuthSignIn from './screens/Auth/SignIn';
 import EnterOTPSignInScreen from './screens/Auth/EnterOTPSignIn';
-import UserInfoDataContext, {
-  UserInfoContext,
-} from './contextAPI/UserInfoContext';
-import UserInfoSignUpDataContext from './contextAPI/UserInfoSignUpContext';
-import {UserAuth} from './contextAPI/UserAuthContext';
-import UserDetail from './screens/userDetail';
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 const App = () => {
-  const {userAuthData} = useContext(UserAuth);
   const dispatch = useDispatch();
   LogBox.ignoreAllLogs(true);
   useEffect(() => {
@@ -69,14 +63,14 @@ const App = () => {
   }, []);
 
   return (
-    <UserInfoSignUpDataContext>
-      <UsersSignUpDataContext>
+  
+     
         <NavigationContainer ref={navigationRef}>
           {AuthStack()}
           {/* <Loader visible={isLoading || authLoading || propertiesLoading} /> */}
         </NavigationContainer>
-      </UsersSignUpDataContext>
-    </UserInfoSignUpDataContext>
+     
+   
   );
 };
 
@@ -109,6 +103,7 @@ const AppStack = () => {
   );
 };
 const AuthStack = () => {
+
   return (
     <Stack.Navigator
       initialRouteName="Splash"
@@ -138,7 +133,7 @@ const AuthStack = () => {
       <Stack.Screen name="Match" component={Match} />
       <Stack.Screen name="MatchSent" component={MatchSent} />
       <Stack.Screen name="MatchDone" component={MatchDone} />
-      <Stack.Screen name="UserDetail" component={UserDetail} />
+      {/* <Stack.Screen name="UserDetail" component={UserDetail} /> */}
       <Stack.Screen name="MessageList" component={MessageList} />
       <Stack.Screen name="ChatDetail" component={ChatDetail} />
       <Stack.Screen name="Profile" component={Profile} />

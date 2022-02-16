@@ -194,7 +194,11 @@ export default function CreateAccount() {
             </Text>
           </LinearGradient>
         </Pressable>
-        <Pressable onPress={() => navigation.navigate('AuthSignIn')}>
+        <Pressable onPress={() => {
+
+
+         return navigation.navigate('AuthSignIn')
+        }}>
           <Text
             style={{
               color: 'black',

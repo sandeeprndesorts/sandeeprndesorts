@@ -203,6 +203,7 @@ export default function SignIn3() {
                               tintColor:
                                 selected == item.id ? '#0E2DCF' : 'black',
                               height: height(10),
+                              resizeMode : "contain",
                               width: width(7.5),
                             }}
                           />
@@ -211,6 +212,7 @@ export default function SignIn3() {
                             source={item.icon}
                             style={{
                               paddingVertical: 20,
+                              resizeMode : "contain",
                               tintColor:
                                 selected == item.id ? '#0E2DCF' : 'black',
                               height: height(5.0),
@@ -222,6 +224,7 @@ export default function SignIn3() {
                         <Image
                           source={item.icon}
                           style={{
+                            resizeMode : "contain", 
                             tintColor:
                               selected == item.id ? '#0E2DCF' : 'black',
                             height: width(10),

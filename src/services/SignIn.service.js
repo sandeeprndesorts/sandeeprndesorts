@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {Alert} from 'react-native';
 import axiosInstance from '../utils/axios';
 export const SignInService = object => {
@@ -7,7 +8,6 @@ export const SignInService = object => {
       return response;
     })
     .catch(err => {
-    
       return err;
     });
 };

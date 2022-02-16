@@ -27,8 +27,14 @@ export default function SignIn5() {
 
   const next = async () => {
     setLoader(true);
-    const response = await SignUpStep5(selectedImages);
-     console.log(response,"upload Images")
+    const newFormat = selectedImages.map((x, i) => {
+      const object = {
+        file: x,
+      };
+      return object;
+    });
+    const response = await SignUpStep5(newFormat);
+    console.log(response, 'upload Images');
     if (response.status === 200) {
       navigation.navigate('SignIn6');
     }
@@ -70,7 +76,7 @@ export default function SignIn5() {
         });
       });
     }
-    setShowPicker(false)
+    setShowPicker(false);
   };
   return (
     <BaseView
@@ -238,7 +244,7 @@ export default function SignIn5() {
         showPicker={false}
         closePicker={() => setShowPicker(false)}
       /> */}
-        <Loader visible={loader} />
+      <Loader visible={loader} />
     </BaseView>
   );
 }

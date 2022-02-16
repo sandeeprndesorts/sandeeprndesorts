@@ -12,6 +12,7 @@ import {fontSize, height, width} from '../components/Resizer';
 import {COLORS, FONTS} from '../constants';
 import {SignUpStep9} from '../services/CreateAccount.services';
 import {GetHobbiesService} from '../services/Hobbies.service';
+import {ActiveButtonColors, DisableButtonColors} from '../utils/ButtonColors';
 export default function SignIn9() {
   const [hobbies, setHobbies] = useState([]);
   const [loader, setLoader] = useState(false);
@@ -84,49 +85,52 @@ export default function SignIn9() {
         </View>
       }
       footer={
-        selected.length > 4 && (
-          <Pressable
+        // selected.length > 4 && (
+        <Pressable
+          disabled={selected < 4 ? true : false}
+          style={{
+            marginBottom: 18,
+          }}
+          onPress={next}>
+          <LinearGradient
+            colors={
+              selected.length < 4 ? ActiveButtonColors : DisableButtonColors
+            }
             style={{
-              marginBottom: 18,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignSelf: 'center',
+              borderRadius: height(1),
+              width: width(80),
+              height: height(7),
             }}
-            onPress={next}>
-            <LinearGradient
-              colors={['#0727CE', '#0727CE', '#052D8D']}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}>
+            <Text
               style={{
-                flexDirection: 'row',
+                color: COLORS.white,
+                fontSize: fontSize(5),
+                textAlign: 'center',
                 justifyContent: 'center',
                 alignSelf: 'center',
-                borderRadius: height(1),
-                width: width(80),
-                height: height(7),
+                fontFamily: FONTS.bold,
+              }}>
+              Next
+            </Text>
+            <Image
+              source={require('../assets/icons/arrow.png')}
+              style={{
+                height: height(6),
+                marginStart: 10,
+                width: width(6),
+                resizeMode: 'contain',
+                justifyContent: 'center',
+                alignSelf: 'center',
               }}
-              start={{x: 0, y: 1}}
-              end={{x: 1, y: 0}}>
-              <Text
-                style={{
-                  color: COLORS.white,
-                  fontSize: fontSize(5),
-                  textAlign: 'center',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  fontFamily: FONTS.bold,
-                }}>
-                Next
-              </Text>
-              <Image
-                source={require('../assets/icons/arrow.png')}
-                style={{
-                  height: height(6),
-                  marginStart: 10,
-                  width: width(6),
-                  resizeMode: 'contain',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                }}
-              />
-            </LinearGradient>
-          </Pressable>
-        )
+            />
+          </LinearGradient>
+        </Pressable>
+        // )
       }>
       {!loader && (
         <View style={{flex: 1}}>
@@ -217,7 +221,7 @@ export default function SignIn9() {
           </View>
         </View>
       )}
-      {loader &&<Loader />}
+      {loader && <Loader />}
     </BaseView>
   );
 }

@@ -20,8 +20,8 @@ import {
   ActionSheetTutorial2,
 } from '../components/ActionSheetFilter';
 import {useContext} from 'react';
-import {UserSignUpContext} from '../contextAPI/UserSignUpData';
-import {getStoredData} from '../utils/LocalStorage';
+
+import {getStoredData, storeData} from '../utils/LocalStorage';
 import {
   GetDashboardUsers,
   LikeUserService,
@@ -30,6 +30,8 @@ import {
 import {mediaBaseUrl} from '../utils/axios';
 import Loader from '../components/Loader';
 import Messager from '../utils/Messager';
+import {NoProfilePhoto} from '../utils/PhotoNotFound';
+import {UserIdContext} from '../contextAPI/userDetailIdContext';
 let placeList = [
   {
     id: 1,
@@ -123,13 +125,14 @@ let interestList = [
 ];
 
 export default function Match({route}) {
-  const {userSignUpData} = useContext(UserSignUpContext);
+  const {setUserDetailId, UserDetailId} = useContext(UserIdContext);
   const [usersData, setUsersData] = useState([]);
   const navigation = useNavigation();
   const [clickImage, setClickImage] = useState(0);
   const [loader, setLoader] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [base, setBase] = useState(1);
+  const [isLiked, setIsLiked] = useState(false);
   const [temp, setTemp] = useState('0');
   const [showTutorial2, setshowTutorial2] = useState(true);
   const [showTutorial1, setshowTutorial1] = useState(true);
@@ -148,7 +151,6 @@ export default function Match({route}) {
   const [selected1, setSelected1] = useState([]);
   const [userData, setUserData] = useState({});
   const [test7, setTest7] = useState(0);
-
   useFocusEffect(
     React.useCallback(() => {
       // console.log(global.base)
@@ -160,36 +162,12 @@ export default function Match({route}) {
       }
     }),
   );
-  const getDashboardUsers = async () => {
-    setLoader(true);
-    const responseDashboardUsers = await GetDashboardUsers({
-      want_to_see_id: userData.want_to_see_id,
-      relationship_status_id: userData.relationship_status_id,
-      hobby_ids: userData.hobbies,
-      goal_ids: userData.goals,
-      frequent_location_ids: userData.frequent_locations,
-      from_age: 18,
-      to_age: 25,
-    });
-    if (responseDashboardUsers.status === 200) {
-      const modifyData = responseDashboardUsers?.data?.users?.map((x, i) => {
-        const data = {
-          id: x.id,
-          name: `${x.first_name}${x.last_name}`,
-          img: x.images,
-        };
-        return data;
-      });
-      setSwipeCards(modifyData);
-      setUsersData(responseDashboardUsers?.data?.users);
-    }
-    setLoader(false);
-  };
-
   useEffect(() => {
     getStoredData('userSignUpEndData')
       .then(data => {
-        setUserData(data);
+        if (data) {
+          setUserData(data);
+        }
       })
       .catch(err => console.log(err));
     // setSelected1([])
@@ -200,6 +178,37 @@ export default function Match({route}) {
     }
     getDashboardUsers();
   }, []);
+
+  const getDashboardUsers = async () => {
+    setLoader(true);
+    const responseDashboardUsers = await GetDashboardUsers({
+      want_to_see_id: userData?.want_to_see_id,
+      relationship_status_id: userData?.relationship_status_id,
+      hobby_ids: userData?.hobbies,
+      goal_ids: userData?.goals,
+      frequent_location_ids: userData?.frequent_locations,
+      from_age: 18,
+      to_age: 25,
+    });
+    console.log(
+      responseDashboardUsers?.data?.users,
+      'responseDashboardUsers?.data?.users',
+    );
+    if (responseDashboardUsers.status === 200) {
+      setUserDetailId(responseDashboardUsers.data?.users[0]?.id);
+      setUsersData(responseDashboardUsers?.data?.users);
+      const modifyData = responseDashboardUsers?.data?.users?.map((x, i) => {
+        const data = {
+          id: x.id,
+          name: `${x.first_name} ${x.last_name}`,
+          img: x.images,
+        };
+        return data;
+      });
+      setSwipeCards(modifyData);
+    }
+    setLoader(false);
+  };
 
   const picker = () => {
     return (
@@ -232,12 +241,10 @@ export default function Match({route}) {
       setUserDetail(responseDetailUser?.data?.user);
     }
     setDetailLoader(false);
-    console.log(responseDetailUser, 'userdetail');
   };
 
   function onFlip() {
     setBase(3);
-
     global.base = '3';
   }
   function onDone() {
@@ -333,6 +340,8 @@ export default function Match({route}) {
     }, 1500);
   };
   const handleLikeUser = async data => {
+    setUserDetailId(data.id);
+    setIsLiked(true);
     const responseLikeUser = await LikeUserService(data?.id);
     if (responseLikeUser.status === 200) {
       Messager.toast(responseLikeUser.data.message);
@@ -391,309 +400,308 @@ export default function Match({route}) {
         </View>
       }>
       {loader && <Loader visible={true} />}
-      {!loader &&
-        usersData?.map((user, index) => {
-          console.log(user);
-          return (
-            <View
-              style={{marginStart: width(1.5), marginEnd: width(3)}}
-              key={index}>
-              <View>
-                <FlatList
-                  data={user.images}
-                  numColumns={2}
-                  keyExtractor={(item, index) => index}
-                  renderItem={({item, index}) => {
-                    return (
-                      <View
-                        style={{
-                          marginHorizontal: width(1),
-                          marginVertical: height(1),
-                        }}>
-                        <TouchableOpacity
-                          activeOpacity={1}
-                          onPress={() => onDetail(user.id)}>
-                          {selected.includes(item.id) ? (
-                            <Image
-                              source={{
-                                uri: ``,
-                              }}
+      {!loader
+        ? usersData?.map((user, index) => {
+            return (
+              <View
+                style={{marginStart: width(1.5), marginEnd: width(3)}}
+                key={index}>
+                <View>
+                  <FlatList
+                    data={user?.images}
+                    numColumns={2}
+                    keyExtractor={(item, index) => index}
+                    renderItem={({item, index}) => {
+                      return (
+                        <View
+                          style={{
+                            marginHorizontal: width(1),
+                            marginVertical: height(1),
+                          }}>
+                          <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={() => onDetail(user.id)}>
+                            {selected.includes(item.id) ? (
+                              <Image
+                                source={{
+                                  uri: ``,
+                                }}
+                                style={{
+                                  height: width(57),
+                                  width: width(45),
+                                  marginHorizontal: width(1),
+                                  marginTop: height(0.1),
+                                }}
+                              />
+                            ) : (
+                              <Image
+                                source={{
+                                  uri:
+                                    user.images[0]?.file.url === null ||
+                                    user.images[0]?.file.url === undefined ||
+                                    user.images[0]?.file.url === '' ||
+                                    user?.images?.length === 0
+                                      ? NoProfilePhoto
+                                      : `${mediaBaseUrl}${user?.images[0]?.file?.url}`,
+                                }}
+                                style={{
+                                  height: width(45),
+                                  width: width(45),
+                                  marginHorizontal: width(1),
+                                }}></Image>
+                            )}
+                          </TouchableOpacity>
+                          {selected.includes(user.id) && index == 0 ? (
+                            <Pressable
                               style={{
-                                height: width(57),
+                                height: height(35),
                                 width: width(45),
-                                marginHorizontal: width(1),
-                                marginTop: height(0.1),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
                               }}
-                            />
-                          ) : (
-                            <Image
-                              source={{
-                                uri:
-                                  user.images[0]?.file.url === null ||
-                                  user.images[0]?.file.url === undefined ||
-                                  user.images[0]?.file.url === ''
-                                    ? 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
-                                    : `${mediaBaseUrl}${user?.images[0]?.file?.url}`,
-                              }}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test1 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test1 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test1 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : selected.includes(item.id) && index == 1 ? (
+                            <Pressable
                               style={{
-                                height: width(45),
+                                height: height(35),
                                 width: width(45),
-                                marginHorizontal: width(1),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
                               }}
-                            />
-                          )}
-                        </TouchableOpacity>
-                        {selected.includes(user.id) && index == 0 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test1 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test1 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test1 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : selected.includes(item.id) && index == 1 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test2 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test2 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test2 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : selected.includes(item.id) && index == 2 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test3 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test3 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test3 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : selected.includes(item.id) && index == 3 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test4 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test4 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test4 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : selected.includes(item.id) && index == 4 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test5 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test5 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test5 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : selected.includes(item.id) && index == 5 ? (
-                          <Pressable
-                            style={{
-                              height: height(35),
-                              width: width(45),
-                              position: 'absolute',
-                              justifyContent: 'center',
-                              alignSelf: 'center',
-                            }}
-                            onPress={emptyList(index)}>
-                            <View>
-                              <Image
-                                source={
-                                  test6 == 1
-                                    ? require('../assets/icons/unlikeRed.png')
-                                    : test6 == 2
-                                    ? require('../assets/icons/showAgain.png')
-                                    : test6 == 3
-                                    ? require('../assets/icons/likeGreen.png')
-                                    : null
-                                }
-                                style={{
-                                  height: width(13),
-                                  width: width(13),
-                                  justifyContent: 'center',
-                                  alignSelf: 'center',
-                                  marginBottom: height(7),
-                                }}
-                              />
-                            </View>
-                          </Pressable>
-                        ) : null}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test2 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test2 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test2 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : selected.includes(item.id) && index == 2 ? (
+                            <Pressable
+                              style={{
+                                height: height(35),
+                                width: width(45),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
+                              }}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test3 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test3 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test3 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : selected.includes(item.id) && index == 3 ? (
+                            <Pressable
+                              style={{
+                                height: height(35),
+                                width: width(45),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
+                              }}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test4 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test4 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test4 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : selected.includes(item.id) && index == 4 ? (
+                            <Pressable
+                              style={{
+                                height: height(35),
+                                width: width(45),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
+                              }}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test5 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test5 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test5 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : selected.includes(item.id) && index == 5 ? (
+                            <Pressable
+                              style={{
+                                height: height(35),
+                                width: width(45),
+                                position: 'absolute',
+                                justifyContent: 'center',
+                                alignSelf: 'center',
+                              }}
+                              onPress={emptyList(index)}>
+                              <View>
+                                <Image
+                                  source={
+                                    test6 == 1
+                                      ? require('../assets/icons/unlikeRed.png')
+                                      : test6 == 2
+                                      ? require('../assets/icons/showAgain.png')
+                                      : test6 == 3
+                                      ? require('../assets/icons/likeGreen.png')
+                                      : null
+                                  }
+                                  style={{
+                                    height: width(13),
+                                    width: width(13),
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    marginBottom: height(7),
+                                  }}
+                                />
+                              </View>
+                            </Pressable>
+                          ) : null}
 
-                        {selected.includes(item.id) ? null : (
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              justifyContent: 'center',
-                              height: height(8),
-                              backgroundColor: '#000000',
-                              opacity: 0.85,
-                              marginTop: height(-2.1),
-                              marginHorizontal: width(1),
-                            }}>
+                          {selected.includes(item.id) ? null : (
                             <View
                               style={{
                                 flexDirection: 'row',
-                                alignSelf: 'center',
-                                position: 'absolute',
+                                justifyContent: 'center',
+                                height: height(8),
+                                backgroundColor: '#000000',
+                                opacity: 0.85,
+                                marginTop: height(-2.1),
+                                marginHorizontal: width(1),
                               }}>
-                              <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => pushArray(item.id, 1)}>
-                                <Image
-                                  source={item.redImage}
-                                  style={{
-                                    height: width(10),
-                                    width: width(10),
-                                    marginHorizontal: width(1),
-                                  }}
-                                  resizeMode={'contain'}
-                                />
-                              </TouchableOpacity>
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  alignSelf: 'center',
+                                  position: 'absolute',
+                                }}>
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => pushArray(item.id, 1)}>
+                                  <Image
+                                    source={require('../assets/icons/unlikeRed.png')}
+                                    style={{
+                                      height: width(10),
+                                      width: width(10),
+                                      marginHorizontal: width(1),
+                                    }}
+                                    resizeMode={'contain'}
+                                  />
+                                </TouchableOpacity>
 
-                              <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => pushArray(item.id, 2)}>
-                                <Image
-                                  source={item.yellowImage}
-                                  style={{
-                                    height: width(10),
-                                    width: width(10),
-                                    marginHorizontal: width(1),
-                                  }}
-                                  resizeMode={'contain'}
-                                />
-                              </TouchableOpacity>
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => pushArray(item.id, 2)}>
+                                  <Image
+                                    source={require('../assets/icons/showAgain.png')}
+                                    style={{
+                                      height: width(10),
+                                      width: width(10),
+                                      marginHorizontal: width(1),
+                                    }}
+                                    resizeMode={'contain'}
+                                  />
+                                </TouchableOpacity>
 
-                              <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => pushArray(item.id, 3)}>
-                                <Image
-                                  source={item.greenImage}
-                                  style={{
-                                    height: width(10),
-                                    width: width(10),
-                                    marginHorizontal: width(1),
-                                  }}
-                                  resizeMode={'contain'}
-                                />
-                              </TouchableOpacity>
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => pushArray(item.id, 3)}>
+                                  <Image
+                                    source={require('../assets/icons/likeGreen.png')}
+                                    style={{
+                                      height: width(10),
+                                      width: width(10),
+                                      marginHorizontal: width(1),
+                                    }}
+                                    resizeMode={'contain'}
+                                  />
+                                </TouchableOpacity>
+                              </View>
                             </View>
-                          </View>
-                        )}
+                          )}
 
-                        {/* 
+                          {/* 
                                   {clickImage == 0 ?
                                       <View style={{ flexDirection: 'row', justifyContent: 'center', height: height(8), backgroundColor: '#000000', opacity: 0.85, marginTop: height(-2.1), marginHorizontal: width(1) }}>
   
@@ -735,95 +743,109 @@ export default function Match({route}) {
   
                                           </View> : null
                                   } */}
-                      </View>
-                    );
-                  }}
-                />
+                        </View>
+                      );
+                    }}
+                  />
+                </View>
               </View>
+            );
+          })
+        : !loader && (
+            <View
+              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <Text
+                style={{
+                  fontSize: fontSize(7),
+                  fontFamily: FONTS.bold,
+                  justifyContent: 'center',
+                  marginHorizontal: width(2),
+                }}>
+                No Users Found
+              </Text>
             </View>
-          );
-        })}
-      {!loader && (
-        <View>
-          <Text
-            style={{
-              fontSize: fontSize(4),
-              justifyContent: 'center',
-              alignSelf: 'center',
-              margin: width(5),
-            }}>
-            Liked{' '}
+          )}
+      {!loader &&
+        (usersData.length > 0 ? (
+          <View>
             <Text
               style={{
-                fontSize: fontSize(5),
+                fontSize: fontSize(4),
                 justifyContent: 'center',
                 alignSelf: 'center',
                 margin: width(5),
-                fontFamily: FONTS.bold,
               }}>
-              {selected1.length > 0 ? selected1.length : '0'}
-            </Text>
-          </Text>
-          {selected1.length > 5 ? (
-            <Text
-              style={{
-                fontSize: fontSize(5),
-                justifyContent: 'center',
-                alignSelf: 'center',
-                margin: width(2),
-                fontFamily: FONTS.bold,
-                color: '#B69A06',
-              }}>
-              {'You reached your max likes'}
-            </Text>
-          ) : null}
-
-          <Pressable
-            onPress={onTopRank}
-            style={{
-              height: height(7),
-              marginVertical: height(1),
-              borderRadius: height(1),
-              backgroundColor: COLORS.primary,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginHorizontal: width(10),
-              marginBottom: 18,
-            }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}>
-              <Image
-                source={require('../assets/icons/rank.png')}
-                style={{
-                  height: height(6),
-                  marginHorizontal: width(3),
-                  width: width(6),
-                  resizeMode: 'contain',
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                }}
-              />
+              Liked{' '}
               <Text
                 style={{
-                  color: COLORS.white,
-                  fontSize: fontSize(4.5),
-                  textAlign: 'center',
+                  fontSize: fontSize(5),
                   justifyContent: 'center',
                   alignSelf: 'center',
+                  margin: width(5),
                   fontFamily: FONTS.bold,
                 }}>
-                Rank my liked matches
+                {selected1.length > 0 ? selected1.length : '0'}
               </Text>
-            </View>
-          </Pressable>
-        </View>
-      )}
-      {picker()}
+            </Text>
+            {selected1.length > 5 ? (
+              <Text
+                style={{
+                  fontSize: fontSize(5),
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                  margin: width(2),
+                  fontFamily: FONTS.bold,
+                  color: '#B69A06',
+                }}>
+                {'You reached your max likes'}
+              </Text>
+            ) : null}
 
+            <Pressable
+              onPress={onTopRank}
+              style={{
+                height: height(7),
+                marginVertical: height(1),
+                borderRadius: height(1),
+                backgroundColor: COLORS.primary,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginHorizontal: width(10),
+                marginBottom: 18,
+              }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}>
+                <Image
+                  source={require('../assets/icons/rank.png')}
+                  style={{
+                    height: height(6),
+                    marginHorizontal: width(3),
+                    width: width(6),
+                    resizeMode: 'contain',
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                  }}
+                />
+                <Text
+                  style={{
+                    color: COLORS.white,
+                    fontSize: fontSize(4.5),
+                    textAlign: 'center',
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                    fontFamily: FONTS.bold,
+                  }}>
+                  Rank my liked matches
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        ) : null)}
+      {picker()}
       {tutorial1()}
     </BaseView>
   ) : base == '2' ? (
@@ -1119,48 +1141,96 @@ export default function Match({route}) {
       }>
       <View>
         <Swiper
-          cards={swipeCards}
-          renderCard={card => {
-            return (
-              <View
-                style={{
-                  justifyContent: 'center',
-                  backgroundColor: '#F6F6F6',
-                  alignItems: 'center',
-                  marginTop: height(-10),
-                }}>
-                <Pressable onPress={onDetail}>
-                  <Image
-                    source={{
-                      uri: `${mediaBaseUrl}${card?.img[0]?.file?.url}`,
-                    }}
-                    style={{
-                      width: width(100),
-                      height: height(72),
-                      justifyContent: 'center',
-                      alignSelf: 'center',
-                    }}
-                  />
-                </Pressable>
+          overlayLabels={{
+            right: {
+              element: (
                 <View
                   style={{
                     position: 'absolute',
+                    top: 0,
                     left: 0,
                     right: 0,
-                    bottom: height(7),
+                    bottom: 0,
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}>
-                  <Text
+                  <Image
                     style={{
-                      fontFamily: FONTS.bold,
-                      fontSize: fontSize(5),
-                      color: 'black',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}>
-                    {card?.name}
-                  </Text>
+                      height: 50,
+                      width: 50,
+                    }}
+                    source={require('../assets/icons/likeGreen.png')}
+                  />
                 </View>
-              </View>
+              ),
+            },
+            left: {
+              element: (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <Image
+                    style={{
+                      height: 50,
+                      width: 50,
+                    }}
+                    source={require('../assets/icons/unlikeRed.png')}
+                  />
+                </View>
+              ),
+            },
+          }}
+          cards={swipeCards}
+          renderCard={card => {
+            return (
+              <>
+                <View
+                  style={{
+                    justifyContent: 'center',
+                    backgroundColor: '#F6F6F6',
+                    alignItems: 'center',
+                    marginTop: height(-10),
+                  }}>
+                  <Pressable onPress={onDetail}>
+                    <Image
+                      source={{
+                        uri: `${mediaBaseUrl}${card?.img[0]?.file?.url}`,
+                      }}
+                      style={{
+                        width: width(100),
+                        height: height(72),
+                        justifyContent: 'center',
+                        alignSelf: 'center',
+                      }}
+                    />
+                  </Pressable>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      bottom: height(9),
+                    }}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.bold,
+                        fontSize: fontSize(5),
+                        color: 'black',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      {card?.name}
+                    </Text>
+                  </View>
+                </View>
+              </>
             );
           }}
           onSwiped={cardIndex => {
@@ -1187,7 +1257,9 @@ export default function Match({route}) {
               backgroundColor: COLORS.primary,
               marginTop: height(3),
             }}>
-            <TouchableOpacity activeOpacity={1} onPress={onDetail}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => onDetail(UserDetailId)}>
               <View
                 style={{
                   flexDirection: 'row',
@@ -1282,297 +1354,356 @@ export default function Match({route}) {
           </View>
         </View>
       }>
-      <View style={{flexDirection: 'column', marginTop: height(1)}}>
-        <View
-          style={{
-            marginStart: width(1.5),
-            marginEnd: width(3),
-            marginBottom: height(5),
-          }}>
+      {detailLoader && <Loader visible={detailLoader} />}
+      {!detailLoader && (
+        <View style={{flexDirection: 'column', marginTop: height(1)}}>
           <View
             style={{
-              justifyContent: 'center',
+              marginStart: width(1.5),
+              marginEnd: width(3),
+              marginBottom: height(5),
             }}>
-            <Pressable>
-              <Image
-                source={{uri: userDetail?.images[0]?.file?.url}}
-                style={{
-                  width: width(100),
-                  height: height(60),
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                }}
-              />
-            </Pressable>
             <View
               style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: height(55),
+                justifyContent: 'center',
               }}>
+              <Pressable>
+                <Image
+                  source={{
+                    // uri: `${mediaBaseUrl}${
+                    //   !userDetail?.images[0]?.file?.url
+                    //     ? NoProfilePhoto
+                    //     : userDetail?.images[0]?.file?.url
+                    // }`,
+                    uri: '',
+                  }}
+                  style={{
+                    width: width(100),
+                    height: height(60),
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                  }}
+                />
+              </Pressable>
+              <View
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: height(55),
+                }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.bold,
+                    fontSize: fontSize(5),
+                    color: 'white',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  {'Jessica, 23'}
+                </Text>
+              </View>
+
               <Text
                 style={{
                   fontFamily: FONTS.bold,
-                  fontSize: fontSize(5),
-                  color: 'white',
+                  fontSize: fontSize(4.5),
+                  color: 'black',
                   justifyContent: 'center',
                   alignItems: 'center',
+                  marginHorizontal: width(5),
+                  marginTop: height(3),
                 }}>
-                {'Jessica, 23'}
+                {`${userDetail.first_name} ${userDetail.last_name}'s Status`}
               </Text>
-            </View>
 
-            <Text
-              style={{
-                fontFamily: FONTS.bold,
-                fontSize: fontSize(4.5),
-                color: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginHorizontal: width(5),
-                marginTop: height(3),
-              }}>
-              {`${userDetail.first_name} ${userDetail.last_name}'s Status`}
-            </Text>
-
-            <Text
-              style={{
-                fontSize: fontSize(3.5),
-                color: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginHorizontal: width(5),
-                marginVertical: height(1),
-              }}>
-              {
-                'My name is Jessica Parker and I enjoy meeting new people and finding ways to help them have an uplifting experience. I enjoy reading..'
-              }
-            </Text>
-
-            <Pressable>
-              <Image
-                source={{uri: 'https://i.pravatar.cc/300'}}
+              <Text
                 style={{
-                  width: width(100),
-                  height: height(60),
+                  fontSize: fontSize(3.5),
+                  color: 'black',
                   justifyContent: 'center',
-                  alignSelf: 'center',
-                  marginVertical: height(2),
-                }}
-              />
-            </Pressable>
+                  alignItems: 'center',
+                  marginHorizontal: width(5),
+                  marginVertical: height(1),
+                }}>
+                {
+                  'My name is Jessica Parker and I enjoy meeting new people and finding ways to help them have an uplifting experience. I enjoy reading..'
+                }
+              </Text>
 
-            <Text
-              style={{
-                fontFamily: FONTS.bold,
-                fontSize: fontSize(4.5),
-                color: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginHorizontal: width(3),
-                marginTop: height(1),
-              }}>
-              {`${userDetail.first_name} ${userDetail.last_name}'s Interest`}
-            </Text>
-
-            <TouchableOpacity activeOpacity={1}>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
-                {interestList.map((item, index) => {
-                  return (
-                    <Pressable
-                      style={{
-                        height: height(5),
-                        paddingHorizontal: width(2),
-                        alignSelf: 'center',
-                        borderRadius: width(3),
-                        backgroundColor: '#6F95FF50',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: width(3),
-                      }}>
-                      <View style={{flexDirection: 'row'}}>
-                        <Image
-                          source={item.icon}
-                          style={{
-                            marginHorizontal: width(1),
-                            width: width(5),
-                            height: width(5),
-                            tintColor: '#0727CE',
-                          }}
-                        />
-
-                        <Text
-                          style={{
-                            fontSize: fontSize(4),
-                            color: 'black',
-                            marginEnd: width(1),
-                          }}>
-                          {item.name}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </TouchableOpacity>
-
-            <Pressable>
-              <Image
-                source={{uri: 'https://i.pravatar.cc/300'}}
-                style={{
-                  width: width(100),
-                  height: height(60),
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  marginVertical: height(2),
-                }}
-              />
-            </Pressable>
-
-            <Text
-              style={{
-                fontFamily: FONTS.bold,
-                fontSize: fontSize(4.5),
-                color: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginHorizontal: width(3),
-                marginTop: height(1),
-              }}>
-              {`${userDetail.first_name} ${userDetail.last_name}'s Favourite Drinks`}
-            </Text>
-
-            <TouchableOpacity activeOpacity={1}>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
-                {['Whiskey', 'Vodka'].map((item, index) => {
-                  return (
-                    <Pressable
-                      style={{
-                        height: height(5),
-                        paddingHorizontal: width(2),
-                        alignSelf: 'center',
-                        borderRadius: width(3),
-                        backgroundColor: '#6F95FF50',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: width(3),
-                      }}>
-                      <View style={{flexDirection: 'row'}}>
-                        <Image
-                          source={require('../assets/icons/drinkk.png')}
-                          style={{
-                            marginHorizontal: width(1),
-                            width: width(5),
-                            height: width(5),
-                            tintColor: '#0727CE',
-                          }}
-                        />
-
-                        <Text
-                          style={{
-                            fontSize: fontSize(4),
-                            color: 'black',
-                            marginEnd: width(1),
-                          }}>
-                          {item}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </TouchableOpacity>
-
-            <Pressable>
-              <Image
-                source={{uri: 'https://i.pravatar.cc/300'}}
-                style={{
-                  width: width(100),
-                  height: height(60),
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  marginVertical: height(2),
-                }}
-              />
-            </Pressable>
-
-            <Text
-              style={{
-                fontFamily: FONTS.bold,
-                fontSize: fontSize(4.5),
-                color: 'black',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginHorizontal: width(3),
-                marginTop: height(1),
-              }}>
-              {`${userDetail.first_name} ${userDetail.last_name}'s Location`}
-            </Text>
-
-            <View
-              style={{
-                justifyContent: 'space-between',
-                flexDirection: 'row',
-                margin: width(3),
-              }}>
-              <View style={{flexDirection: 'row'}}>
+              <Pressable>
                 <Image
-                  source={require('../assets/icons/addressLocation.png')}
+                  source={{uri: 'https://i.pravatar.cc/300'}}
                   style={{
-                    marginHorizontal: width(1),
-                    width: width(5),
-                    height: width(5),
-                    tintColor: '#0727CE',
+                    width: width(100),
+                    height: height(60),
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                    marginVertical: height(2),
                   }}
                 />
+              </Pressable>
+
+              <Text
+                style={{
+                  fontFamily: FONTS.bold,
+                  fontSize: fontSize(4.5),
+                  color: 'black',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: width(3),
+                  marginTop: height(1),
+                }}>
+                {`${userDetail.first_name} ${userDetail.last_name}'s Interest`}
+              </Text>
+
+              <TouchableOpacity activeOpacity={1}>
+                <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+                  {interestList.map((item, index) => {
+                    return (
+                      <Pressable
+                        style={{
+                          height: height(5),
+                          paddingHorizontal: width(2),
+                          alignSelf: 'center',
+                          borderRadius: width(3),
+                          backgroundColor: '#6F95FF50',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: width(3),
+                        }}>
+                        <View style={{flexDirection: 'row'}}>
+                          <Image
+                            source={item.icon}
+                            style={{
+                              marginHorizontal: width(1),
+                              width: width(5),
+                              height: width(5),
+                              tintColor: '#0727CE',
+                            }}
+                          />
+
+                          <Text
+                            style={{
+                              fontSize: fontSize(4),
+                              color: 'black',
+                              marginEnd: width(1),
+                            }}>
+                            {item.name}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </TouchableOpacity>
+
+              <Pressable>
+                <Image
+                  source={{uri: 'https://i.pravatar.cc/300'}}
+                  style={{
+                    width: width(100),
+                    height: height(60),
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                    marginVertical: height(2),
+                  }}
+                />
+              </Pressable>
+
+              <Text
+                style={{
+                  fontFamily: FONTS.bold,
+                  fontSize: fontSize(4.5),
+                  color: 'black',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: width(3),
+                  marginTop: height(1),
+                }}>
+                {`${userDetail.first_name} ${userDetail.last_name}'s Favourite Drinks`}
+              </Text>
+
+              <TouchableOpacity activeOpacity={1}>
+                <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+                  {['Whiskey', 'Vodka'].map((item, index) => {
+                    return (
+                      <Pressable
+                        style={{
+                          height: height(5),
+                          paddingHorizontal: width(2),
+                          alignSelf: 'center',
+                          borderRadius: width(3),
+                          backgroundColor: '#6F95FF50',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: width(3),
+                        }}>
+                        <View style={{flexDirection: 'row'}}>
+                          <Image
+                            source={require('../assets/icons/drinkk.png')}
+                            style={{
+                              marginHorizontal: width(1),
+                              width: width(5),
+                              height: width(5),
+                              tintColor: '#0727CE',
+                            }}
+                          />
+
+                          <Text
+                            style={{
+                              fontSize: fontSize(4),
+                              color: 'black',
+                              marginEnd: width(1),
+                            }}>
+                            {item}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </TouchableOpacity>
+
+              <Pressable>
+                <Image
+                  source={{uri: 'https://i.pravatar.cc/300'}}
+                  style={{
+                    width: width(100),
+                    height: height(60),
+                    justifyContent: 'center',
+                    alignSelf: 'center',
+                    marginVertical: height(2),
+                  }}
+                />
+              </Pressable>
+
+              <Text
+                style={{
+                  fontFamily: FONTS.bold,
+                  fontSize: fontSize(4.5),
+                  color: 'black',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: width(3),
+                  marginTop: height(1),
+                }}>
+                {`${userDetail.first_name} ${userDetail.last_name}'s Location`}
+              </Text>
+
+              <View
+                style={{
+                  justifyContent: 'space-between',
+                  flexDirection: 'row',
+                  margin: width(3),
+                }}>
+                <View style={{flexDirection: 'row'}}>
+                  <Image
+                    source={require('../assets/icons/addressLocation.png')}
+                    style={{
+                      marginHorizontal: width(1),
+                      width: width(5),
+                      height: width(5),
+                      tintColor: '#0727CE',
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontWeight: '400',
+                      color: 'black',
+                      fontSize: fontSize(4),
+                    }}>
+                    Chicago, IL United States
+                  </Text>
+                </View>
                 <Text
                   style={{
                     fontWeight: '400',
                     color: 'black',
                     fontSize: fontSize(4),
                   }}>
-                  Chicago, IL United States
+                  200 ft away
                 </Text>
               </View>
-              <Text
-                style={{
-                  fontWeight: '400',
-                  color: 'black',
-                  fontSize: fontSize(4),
-                }}>
-                200 ft away
-              </Text>
             </View>
-          </View>
 
-          {test7 == 0 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                marginTop: height(4),
-                marginBottom: height(10),
-              }}>
-              <Pressable
-                onPress={() => clickButton(1)}
-                style={{width: width(15), height: width(15)}}>
-                <Image
-                  source={require('../assets/icons/unlikeRed.png')}
+            {test7 == 0 ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginTop: height(4),
+                  marginBottom: height(10),
+                }}>
+                <Pressable
+                  onPress={() => clickButton(1)}
+                  style={{width: width(15), height: width(15)}}>
+                  <Image
+                    source={require('../assets/icons/unlikeRed.png')}
+                    style={{
+                      marginHorizontal: width(8),
+                      width: width(15),
+                      height: width(15),
+                    }}
+                  />
+                </Pressable>
+
+                <Pressable
+                  onPress={() => clickButton(2)}
                   style={{
-                    marginHorizontal: width(8),
                     width: width(15),
                     height: width(15),
-                  }}
-                />
-              </Pressable>
+                    marginStart: width(5),
+                  }}>
+                  <Image
+                    source={require('../assets/icons/showAgain.png')}
+                    style={{
+                      marginHorizontal: width(5),
+                      width: width(15),
+                      height: width(15),
+                    }}
+                  />
+                </Pressable>
 
-              <Pressable
-                onPress={() => clickButton(2)}
+                <Pressable
+                  onPress={() => clickButton(3)}
+                  style={{
+                    width: width(15),
+                    height: width(15),
+                    marginEnd: width(15),
+                  }}>
+                  <Image
+                    source={require('../assets/icons/likeGreen.png')}
+                    style={{
+                      marginHorizontal: width(8),
+                      width: width(15),
+                      height: width(15),
+                    }}
+                  />
+                </Pressable>
+              </View>
+            ) : test7 == 1 ? (
+              <View
                 style={{
-                  width: width(15),
-                  height: width(15),
-                  marginStart: width(5),
+                  flexDirection: 'row',
+                  marginTop: height(4),
+                  marginBottom: height(10),
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}>
+                <Image
+                  source={require('../assets/icons/unlikeRed.png')}
+                  style={{width: width(15), height: width(15)}}
+                />
+              </View>
+            ) : test7 == 2 ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginTop: height(4),
+                  marginBottom: height(10),
+                  justifyContent: 'center',
+                  alignSelf: 'center',
                 }}>
                 <Image
                   source={require('../assets/icons/showAgain.png')}
@@ -1582,14 +1713,15 @@ export default function Match({route}) {
                     height: width(15),
                   }}
                 />
-              </Pressable>
-
-              <Pressable
-                onPress={() => clickButton(3)}
+              </View>
+            ) : test7 == 3 ? (
+              <View
                 style={{
-                  width: width(15),
-                  height: width(15),
-                  marginEnd: width(15),
+                  flexDirection: 'row',
+                  marginTop: height(4),
+                  marginBottom: height(10),
+                  justifyContent: 'center',
+                  alignSelf: 'center',
                 }}>
                 <Image
                   source={require('../assets/icons/likeGreen.png')}
@@ -1599,61 +1731,11 @@ export default function Match({route}) {
                     height: width(15),
                   }}
                 />
-              </Pressable>
-            </View>
-          ) : test7 == 1 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                marginTop: height(4),
-                marginBottom: height(10),
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}>
-              <Image
-                source={require('../assets/icons/unlikeRed.png')}
-                style={{width: width(15), height: width(15)}}
-              />
-            </View>
-          ) : test7 == 2 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                marginTop: height(4),
-                marginBottom: height(10),
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}>
-              <Image
-                source={require('../assets/icons/showAgain.png')}
-                style={{
-                  marginHorizontal: width(5),
-                  width: width(15),
-                  height: width(15),
-                }}
-              />
-            </View>
-          ) : test7 == 3 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                marginTop: height(4),
-                marginBottom: height(10),
-                justifyContent: 'center',
-                alignSelf: 'center',
-              }}>
-              <Image
-                source={require('../assets/icons/likeGreen.png')}
-                style={{
-                  marginHorizontal: width(8),
-                  width: width(15),
-                  height: width(15),
-                }}
-              />
-            </View>
-          ) : null}
+              </View>
+            ) : null}
+          </View>
         </View>
-      </View>
+      )}
 
       {picker()}
     </BaseView>

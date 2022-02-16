@@ -1,6 +1,7 @@
 import {Endpoints} from '../utils/Api_Endpoints';
 import axiosInstance from '../utils/axios';
 export const GetDashboardUsers = data => {
+  console.log(data,"serviceSide")
   return axiosInstance
     .post(`${Endpoints.Dashboard.GET_DASHBOARD_USERS}`, data)
     .then(response => {
