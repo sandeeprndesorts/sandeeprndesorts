@@ -1,0 +1,86 @@
+import React from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import ReactNativeModal from 'react-native-modal';
+
+export function CustomActionSheet({
+  isVisible,
+  onClose,
+  title,
+  options,
+  onSelected,
+}) {
+  return (
+    <ReactNativeModal
+      isVisible={isVisible}
+      onBackButtonPress={onClose}
+      onBackdropPress={onClose}
+      backdropOpacity={0.5}
+      style={styles.modalBox}
+      useNativeDriver={true}>
+      <View style={styles.optionsBox}>
+        {options.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.buttonBox}
+            onPress={() => {
+              onClose(), onSelected(index);
+            }}>
+            <Text
+              style={[
+                styles.itemTitleText,
+                {color: item.color ? item.color : 'red'},
+              ]}>
+              {item.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onClose}
+        style={styles.cancelBox}>
+        <Text style={styles.cancelText}>Cancel</Text>
+      </TouchableOpacity>
+    </ReactNativeModal>
+  );
+}
+
+const fonts = {};
+
+const styles = StyleSheet.create({
+  titleBox: {
+    height: 40,
+    alignItems: 'center',
+    borderRadius: 8,
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  optionsBox: {backgroundColor: 'white', borderRadius: 8},
+  modalBox: {margin: 10, justifyContent: 'flex-end', flex: 1},
+  titleText: {
+    color: '#757575',
+    fontSize: 12,
+    fontFamily: fonts.medium,
+  },
+  itemTitleText: {padding: 15, fontSize: 16, alignSelf: 'center'},
+  cancelText: {padding: 15, fontSize: 16},
+  cancelBox: {
+    backgroundColor: 'white',
+    marginTop: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonBox: {
+    height: 50,
+    marginTop: 1,
+    alignItems: 'center',
+    borderRadius: 8,
+    borderBottomColor: '#E5E5E5',
+    borderBottomWidth: 1,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+});

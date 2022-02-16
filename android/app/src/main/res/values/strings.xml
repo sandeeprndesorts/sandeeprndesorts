@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name" translatable="false">beaconDatingAPP</string>
+    <string name="google_maps_key">AIzaSyCERh_iE6TKouQ-v7rYgSXvSCFSCxC4oiQ</string>
+</resources>
